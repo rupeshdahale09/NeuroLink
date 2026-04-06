@@ -26,6 +26,12 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>NeuroLink needs your location to provide voice navigation guidance.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>NeuroLink uses the microphone for wake word detection and voice commands.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>NeuroLink converts your speech into commands for zero-vision interaction.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

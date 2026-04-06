@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../controllers/vocal_controller.dart';
 import 'vocal_bottom_navigation.dart';
 
 /// Blue gradient top bar with back, title, home, and refresh — used on Vocal sub-screens.
@@ -83,7 +85,7 @@ class VocalEmergencyFab extends StatelessWidget {
       shape: const CircleBorder(),
       child: InkWell(
         customBorder: const CircleBorder(),
-        onTap: () {},
+        onTap: () => context.read<VocalController>().emergencyAction(),
         child: Ink(
           width: 52,
           height: 52,
@@ -103,7 +105,7 @@ class VocalEmergencyFab extends StatelessWidget {
 }
 
 /// Scaffold with [VocalSubHeader] and [VocalBottomNavigation] for Vocal sub-flows.
-class VocalSubScaffold extends StatelessWidget {
+class VocalSubScaffold extends StatefulWidget {
   const VocalSubScaffold({
     super.key,
     required this.title,
@@ -118,14 +120,35 @@ class VocalSubScaffold extends StatelessWidget {
   final Widget body;
 
   @override
+  State<VocalSubScaffold> createState() => _VocalSubScaffoldState();
+}
+
+class _VocalSubScaffoldState extends State<VocalSubScaffold> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final section = switch (widget.navIndex) {
+        0 => VocalSection.learn,
+        1 => VocalSection.communicate,
+        2 => VocalSection.play,
+        3 => VocalSection.control,
+        4 => VocalSection.community,
+        _ => VocalSection.home,
+      };
+      context.read<VocalController>().enterSection(section);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
-      appBar: VocalSubHeader(title: title),
-      body: body,
+      appBar: VocalSubHeader(title: widget.title),
+      body: widget.body,
       bottomNavigationBar: VocalBottomNavigation(
-        currentIndex: navIndex,
-        onTap: onNavTap,
+        currentIndex: widget.navIndex,
+        onTap: widget.onNavTap,
       ),
     );
   }
