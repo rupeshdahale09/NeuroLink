@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../controllers/vocal_controller.dart';
 import '../vocal_navigation.dart';
 import '../widgets/vocal_sub_header.dart';
 
@@ -34,22 +36,29 @@ class LearnScreen extends StatelessWidget {
               const SizedBox(height: 12),
               _VoiceBanner(),
               const SizedBox(height: 20),
-              _CourseCard(
-                index: 1,
-                title: 'Introduction to Technology',
-                instructor: 'Dr. Sarah Johnson',
-                duration: '45 min',
-                progress: 0.65,
-                numGradient: _numGrad,
-              ),
-              const SizedBox(height: 16),
-              _CourseCard(
-                index: 2,
-                title: 'Digital Accessibility Basics',
-                instructor: 'Prof. James Chen',
-                duration: '38 min',
-                progress: 0.3,
-                numGradient: _numGrad,
+              Consumer<VocalController>(
+                builder: (context, controller, _) {
+                  return Column(
+                    children: List.generate(controller.courses.length, (index) {
+                      final title = controller.courses[index];
+                      final progress = controller.lessonProgress[index] ?? 0.0;
+                      return Padding(
+                        padding: EdgeInsets.only(bottom: index == controller.courses.length - 1 ? 0 : 16),
+                        child: _CourseCard(
+                          index: index + 1,
+                          title: title,
+                          instructor: 'NeuroBot Lesson Guide',
+                          duration: '${30 + index * 5} min',
+                          progress: progress,
+                          numGradient: _numGrad,
+                          onPlay: () => controller.selectCourseByVoice(title.toLowerCase()),
+                          onNext: controller.continueLesson,
+                          onAnnounce: controller.repeatInstruction,
+                        ),
+                      );
+                    }),
+                  );
+                },
               ),
             ],
           ),
@@ -112,6 +121,9 @@ class _CourseCard extends StatelessWidget {
     required this.duration,
     required this.progress,
     required this.numGradient,
+    required this.onPlay,
+    required this.onNext,
+    required this.onAnnounce,
   });
 
   final int index;
@@ -120,6 +132,9 @@ class _CourseCard extends StatelessWidget {
   final String duration;
   final double progress;
   final Gradient numGradient;
+  final VoidCallback onPlay;
+  final VoidCallback onNext;
+  final VoidCallback onAnnounce;
 
   @override
   Widget build(BuildContext context) {
@@ -230,7 +245,7 @@ class _CourseCard extends StatelessWidget {
                 child: Material(
                   borderRadius: BorderRadius.circular(12),
                   child: InkWell(
-                    onTap: () {},
+                    onTap: onPlay,
                     borderRadius: BorderRadius.circular(12),
                     child: Ink(
                       height: 48,
@@ -259,9 +274,9 @@ class _CourseCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 10),
-              _SmallGreyButton(icon: Icons.skip_next_rounded, onTap: () {}),
+              _SmallGreyButton(icon: Icons.skip_next_rounded, onTap: onNext),
               const SizedBox(width: 10),
-              _SmallGreyButton(icon: Icons.volume_up_rounded, onTap: () {}),
+              _SmallGreyButton(icon: Icons.volume_up_rounded, onTap: onAnnounce),
             ],
           ),
         ],

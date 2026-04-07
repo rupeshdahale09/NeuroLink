@@ -14,6 +14,7 @@ class VoiceService {
 
   bool get isListening => _speech.isListening;
   bool get isInitialized => _initialized;
+  Future<bool> get hasPermission => _speech.hasPermission;
 
   Future<bool> initialize() async {
     _initialized = await _speech.initialize(
@@ -37,6 +38,16 @@ class VoiceService {
     await _listen();
   }
 
+  Future<void> restartContinuousListening(VoiceTextCallback onText) async {
+    _onText = onText;
+    _continuous = true;
+    _active = true;
+    if (_speech.isListening) {
+      await _speech.stop();
+    }
+    await _listen();
+  }
+
   Future<void> stopListening() async {
     _active = false;
     _continuous = false;
@@ -50,7 +61,7 @@ class VoiceService {
     await _speech.listen(
       onResult: _handleResult,
       listenFor: const Duration(minutes: 2),
-      pauseFor: const Duration(seconds: 5),
+      pauseFor: const Duration(seconds: 2),
       listenOptions: SpeechListenOptions(
         partialResults: true,
         cancelOnError: false,

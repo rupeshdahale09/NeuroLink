@@ -1,20 +1,37 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../controllers/neurobot_controller.dart';
+import '../controllers/vocal_controller.dart';
 import '../vocal_navigation.dart';
 import '../widgets/vocal_sub_header.dart';
 
+const _communicateBubbleBlue = LinearGradient(
+  colors: [Color(0xFF2563EB), Color(0xFF1D4ED8)],
+  begin: Alignment.topLeft,
+  end: Alignment.bottomRight,
+);
+
 /// Voice Chat — assistant bubbles, user bubble, hold-to-speak, bottom nav (Communicate active).
-class CommunicateScreen extends StatelessWidget {
+class CommunicateScreen extends StatefulWidget {
   const CommunicateScreen({super.key});
 
-  static const _bubbleBlue = LinearGradient(
-    colors: [Color(0xFF2563EB), Color(0xFF1D4ED8)],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-  );
+  @override
+  State<CommunicateScreen> createState() => _CommunicateScreenState();
+}
+
+class _CommunicateScreenState extends State<CommunicateScreen> {
+  final TextEditingController _textController = TextEditingController();
+
+  @override
+  void dispose() {
+    _textController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final chat = context.watch<NeurobotController>().chatHistory;
     return VocalSubScaffold(
       title: 'Voice Chat',
       navIndex: 1,
@@ -26,14 +43,21 @@ class CommunicateScreen extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
               children: [
                 const _AssistantBubble(
-                  text: 'Hello! How can I assist you today?',
+                  text: 'Say "Hello NeuroBot" and then speak naturally. You can also type below.',
                 ),
                 const SizedBox(height: 14),
-                const _UserBubble(text: "What's the weather like?"),
-                const SizedBox(height: 14),
-                const _AssistantBubble(
-                  text: "It's sunny and 72°F outside. Perfect day!",
-                ),
+                ...chat.map((entry) {
+                  if (entry.startsWith('User: ')) {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: _UserBubble(text: entry.replaceFirst('User: ', '')),
+                    );
+                  }
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: _AssistantBubble(text: entry.replaceFirst('NeuroBot: ', '')),
+                  );
+                }),
               ],
             ),
           ),
@@ -45,22 +69,26 @@ class CommunicateScreen extends StatelessWidget {
                   child: Material(
                     borderRadius: BorderRadius.circular(28),
                     child: InkWell(
-                      onTap: () {},
+                      onTap: () async {
+                        final text = _textController.text.trim();
+                        if (text.isEmpty) return;
+                        _textController.clear();
+                        await context.read<VocalController>().handleManualCommand(text);
+                      },
                       borderRadius: BorderRadius.circular(28),
                       child: Ink(
                         height: 54,
                         decoration: const BoxDecoration(
-                          gradient: _bubbleBlue,
+                          gradient: _communicateBubbleBlue,
                           borderRadius: BorderRadius.all(Radius.circular(28)),
                         ),
-                        child: const Row(
+                        child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.mic_rounded,
-                                color: Colors.white, size: 26),
-                            SizedBox(width: 10),
+                            const Icon(Icons.send_rounded, color: Colors.white, size: 22),
+                            const SizedBox(width: 10),
                             Text(
-                              'Hold to Speak',
+                              _textController.text.trim().isEmpty ? 'Say Hello NeuroBot' : 'Send Message',
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 17,
@@ -80,7 +108,9 @@ class CommunicateScreen extends StatelessWidget {
                   shape: const CircleBorder(),
                   child: InkWell(
                     customBorder: const CircleBorder(),
-                    onTap: () {},
+                    onTap: () {
+                      context.read<NeurobotController>().clearChat();
+                    },
                     child: Ink(
                       width: 54,
                       height: 54,
@@ -89,7 +119,7 @@ class CommunicateScreen extends StatelessWidget {
                         color: Color(0xFFE53935),
                       ),
                       child: const Icon(
-                        Icons.error_outline_rounded,
+                        Icons.delete_outline_rounded,
                         color: Colors.white,
                         size: 26,
                       ),
@@ -97,6 +127,26 @@ class CommunicateScreen extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: TextField(
+              controller: _textController,
+              decoration: InputDecoration(
+                hintText: 'Type or speak your message',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.replay_rounded),
+                  onPressed: () => context.read<VocalController>().repeatInstruction(),
+                ),
+              ),
+              onSubmitted: (value) async {
+                final text = value.trim();
+                if (text.isEmpty) return;
+                _textController.clear();
+                await context.read<VocalController>().handleManualCommand(text);
+              },
             ),
           ),
         ],
@@ -179,7 +229,7 @@ class _UserBubble extends StatelessWidget {
         ),
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
         decoration: BoxDecoration(
-          gradient: CommunicateScreen._bubbleBlue,
+          gradient: _communicateBubbleBlue,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(

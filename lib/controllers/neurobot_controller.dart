@@ -23,13 +23,15 @@ class NeurobotController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<String> replyToUser(String userText) async {
+  Future<String> replyToUser(String userText, {bool speakResponse = false}) async {
     _chatHistory.add('User: $userText');
-    final reply = await _aiService.generateReply(userText);
+    final reply = await _aiService.sendMessageToAI(userText);
     _chatHistory.add('NeuroBot: $reply');
     _lastReply = reply;
     notifyListeners();
-    await _ttsService.speak(reply);
+    if (speakResponse) {
+      await _ttsService.speak(reply);
+    }
     return reply;
   }
 }
