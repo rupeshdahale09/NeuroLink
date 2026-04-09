@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'eyeunlock_screen.dart';
 import 'vocal_screen.dart';
 
 /// Mode selection — NeuroLink home. Tapping Vocal Mode opens [VocalScreen].
@@ -57,7 +58,13 @@ class HomeScreen extends StatelessWidget {
                   trailingIcon: Icons.remove_red_eye_outlined,
                   trailingColor: const Color(0xFF16A34A),
                   cardTint: const Color(0xFFF0FDF4),
-                  onTap: () => _showPlaceholder(context, 'EyeUnlock Mode'),
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const EyeUnlockScreen(),
+                      ),
+                    );
+                  },
                 ),
                 const SizedBox(height: 18),
                 _ModeCard(
@@ -65,8 +72,7 @@ class HomeScreen extends StatelessWidget {
                   numberGradient: const [Color(0xFFF97316), Color(0xFFC2410C)],
                   title: 'Deaf Mode',
                   titleColor: const Color(0xFFC2410C),
-                  description:
-                      'Visual & Text-Based Interaction for Deaf Users',
+                  description: 'Visual & Text-Based Interaction for Deaf Users',
                   trailingIcon: Icons.back_hand_outlined,
                   trailingColor: const Color(0xFFEA580C),
                   cardTint: const Color(0xFFFFF7ED),
